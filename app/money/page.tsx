@@ -10,7 +10,10 @@ const hotelTotal = hotels.reduce((sum, item) => sum + item.amount, 0);
 const hongKongOutboundFlight = 8139;
 const fourSegmentFlight = 22760;
 const flightTotal = hongKongOutboundFlight + fourSegmentFlight;
-const confirmedTotal = hotelTotal + flightTotal + 11090;
+const usjExpressPass = 11090;
+const usjStudioPass = 7806;
+const ticketTotal = usjExpressPass + usjStudioPass;
+const confirmedTotal = hotelTotal + flightTotal + ticketTotal;
 
 export default function MoneyPage() {
   return (
@@ -27,7 +30,7 @@ export default function MoneyPage() {
         <div className="money-total">
           <small>目前已確認支出</small>
           <strong>{currency(confirmedTotal)}</strong>
-          <em>飯店、兩筆機票訂單與 USJ 快速通關券</em>
+          <em>飯店、機票與已購 USJ 票券；eSIM 金額待補</em>
         </div>
       </section>
 
@@ -43,13 +46,18 @@ export default function MoneyPage() {
           <article><div><small>9/15、9/16、9/22、9/23・星宇航空</small><h3>四段票</h3><p>香港 → 台北、台北 → 大阪、大阪 → 台北、台北 → 香港・兩人份</p></div><strong>{currency(fourSegmentFlight)}</strong><span className="paid">已出票</span></article>
         </div>
 
-        <div className="money-section-heading"><div><p>TICKETS</p><h2>票券</h2></div><strong>已付 {currency(11090)}</strong></div>
+        <div className="money-section-heading"><div><p>TICKETS</p><h2>票券</h2></div><strong>{currency(ticketTotal)}</strong></div>
         <div className="expense-list">
-          <article><div><small>9/17・Express Pass 8</small><h3>USJ 快速通關券</h3><p>Minecart &amp; Flying Dinosaur Special</p></div><strong>{currency(11090)}</strong><span className="paid">已購</span></article>
-          <article className="pending"><div><small>8/16 開放購買</small><h3>USJ Studio Pass 入場券</h3><p>尚未訂購，買完後再補上實際金額。</p></div><strong>金額待補</strong><span className="todo">待購買</span></article>
+          <article><div><small>9/17・Express Pass 8</small><h3>USJ 快速通關券</h3><p>Minecart &amp; Flying Dinosaur Special</p></div><strong>{currency(usjExpressPass)}</strong><span className="paid">已購</span></article>
+          <article><div><small>USJ Studio Pass・兩人份</small><h3>USJ 入場券</h3><p>已完成購買。</p></div><strong>{currency(usjStudioPass)}</strong><span className="paid">已購</span></article>
         </div>
 
-        <aside className="money-note"><b>目前怎麼看總額？</b><p>{currency(confirmedTotal)} 已包含飯店、台北飛香港單程票、星宇四段票與 USJ 快速通關券；USJ 入場券尚未購買，之後再補入總額。</p></aside>
+        <div className="money-section-heading"><div><p>CONNECTIVITY</p><h2>網路</h2></div><strong>金額待補</strong></div>
+        <div className="expense-list">
+          <article className="pending"><div><small>517 處理</small><h3>香港／日本 eSIM</h3><p>由 517 購買，完成後再補上實際金額。</p></div><strong>金額待補</strong><span className="todo">待購買</span></article>
+        </div>
+
+        <aside className="money-note"><b>目前怎麼看總額？</b><p>{currency(confirmedTotal)} 已包含飯店、機票、USJ 快速通關券與 USJ 入場券；eSIM 尚未計入，等 517 購買後再更新。</p></aside>
       </section>
     </main>
   );
