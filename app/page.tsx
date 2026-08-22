@@ -23,15 +23,15 @@ const days: Day[] = [
 
 const decisions = [
   { title: "京都路線骨架", detail: "9/19 南禪寺與鴨川、9/20 嵐山與渡月橋；細節保留現場選擇。", who: "已定方向", tone: "kyoto" },
-  { title: "USJ 入場券", detail: "9/17 快速通關已買；尚缺 Studio Pass，8/16 開放後購買。", who: "8/16 買票", tone: "osaka" },
+  { title: "USJ 入場券", detail: "USJ Studio Pass 已完成購買；9/17 快速通關也已備妥。", who: "已購", tone: "osaka" },
   { title: "星星桶版本", detail: "只想買五週年新版，兌換券是否保證指定版本待核實。", who: "行前查證", tone: "hongkong" },
   { title: "香港必吃排序", detail: "Bakehouse、Hashtag B、甘牌、愛文生，不需要每家都吃。", who: "517 Review", tone: "hongkong" },
 ];
 const prepItems: PrepItem[] = [
   { id: "flights", title: "確認航班行李與報到時間", detail: "四段航班時間已補齊；再確認行李額度與各段建議抵達機場時間。", category: "資料確認", shared: true },
-  { id: "usj-pass", title: "8/16 購買 USJ 入場券", detail: "9/17 快速通關已購，尚缺 Studio Pass；8/16 開放後購買。", category: "票券與預約", shared: true },
+  { id: "usj-pass", title: "USJ 入場券已完成購買", detail: "Studio Pass 與 9/17 快速通關皆已購買完成。", category: "票券與預約", shared: true },
   { id: "currency", title: "準備港幣與付款方式", detail: "決定要在台灣先換多少港幣，並確認香港刷卡、電子支付與備用現金。", category: "金流與網路", shared: true },
-  { id: "internet", title: "安排香港／日本網路", detail: "比較 eSIM、SIM 卡或漫遊方案，確認 517 與一一各自的網路需求。", category: "金流與網路", shared: true },
+  { id: "internet", title: "安排香港／日本 eSIM", detail: "由 517 處理購買；完成後補上方案與實際金額。", category: "金流與網路", shared: true },
   { id: "passport", title: "檢查護照與訂房姓名", detail: "確認效期、機票與四間住宿的英文姓名一致。", category: "資料確認" },
   { id: "offline", title: "離線保存重要憑證", detail: "將機票、住宿、USJ 票券及保險資料存到手機，避免現場網路不穩。", category: "資料確認" },
   { id: "insurance", title: "確認旅平險／不便險", detail: "確認保障期間完整涵蓋 9/12–9/22 與香港、日本兩地。", category: "票券與預約" },
@@ -104,7 +104,7 @@ export default function Home() {
       <header className="topbar">
         <a className="brand" href="#top"><span className="brand-mark">HK ⇢ JP</span><span>香港日本行 <i>2026</i></span></a>
         <nav aria-label="主要導覽"><a href="#overview">行程總覽</a><a href="#transport">交通</a><a href="#itinerary">每日行程</a><a href="#prep">行前準備</a><a className="yiyi-only" href="#usj">USJ</a><a className="yiyi-only" href="#decisions">待決定</a><a href="/money">錢錢</a></nav>
-        <div className="mode-switch" role="group" aria-label="切換旅行頁面模式"><button className={mode === "517" ? "active" : ""} onClick={() => changeMode("517")} aria-pressed={mode === "517"}>517</button><button className={mode === "yiyi" ? "active" : ""} onClick={() => changeMode("yiyi")} aria-pressed={mode === "yiyi"}>一一</button></div>
+        <a className="mobile-money-link" href="/money" aria-label="查看旅費">錢錢</a><div className="mode-switch" role="group" aria-label="切換旅行頁面模式"><button className={mode === "517" ? "active" : ""} onClick={() => changeMode("517")} aria-pressed={mode === "517"}>517</button><button className={mode === "yiyi" ? "active" : ""} onClick={() => changeMode("yiyi")} aria-pressed={mode === "yiyi"}>一一</button></div>
       </header>
 
       <section className="hero" id="top">
@@ -114,92 +114,24 @@ export default function Home() {
           <h1>香港日本行 <em>2026</em></h1>
           <div className="trip-date">09.12 — 09.22</div>
           <p className="hero-copy"><span className="mode-copy mode-copy-517">香港、大阪與京都。重要資訊、住宿和大致行程都在這裡。</span><span className="mode-copy mode-copy-yiyi">11 天，從維港霓虹走進大阪魔法世界，最後在京都慢慢散步。</span></p>
-          <div className="hero-actions"><button onClick={scrollToItinerary}>查看每日行程 <span>↓</span></button><a className="yiyi-only" href="#decisions">待確認事項</a></div>
+          <div className="hero-actions"><button onClick={scrollToItinerary}>查看每日行程</button><a className="ghost-link yiyi-only" href="#decisions">待決定事項 →</a></div>
         </div>
-        <aside className="trip-panel" aria-label="旅程摘要">
-          <div className="panel-heading"><span className="calendar-icon">✦</span><div><strong>11 天旅程</strong><small>香港・大阪・京都</small></div></div>
-          <div className="progress-label"><span>旅程進度</span><b>規劃中</b></div><div className="progress"><i /></div>
-          <div className="city-doors">
-            <a className="hongkong" href="#itinerary" onClick={() => setCity("香港")}><small>DAY 01—04</small><b>香港</b><span>城市・咖啡・夜景</span></a>
-            <a className="osaka" href="#itinerary" onClick={() => setCity("大阪")}><small>DAY 05—07・10—11</small><b>大阪</b><span>USJ・道頓堀</span></a>
-            <a className="kyoto" href="#itinerary" onClick={() => setCity("京都")}><small>DAY 08—09</small><b>京都</b><span>古都・散步・探險</span></a>
-          </div>
-        </aside>
+        <aside className="trip-panel"><div className="panel-heading"><span>TRIP AT A GLANCE</span><strong>11 DAYS</strong></div><div className="route-line"><div><b>HKG</b><span>09.12 — 09.15</span></div><i>→</i><div><b>TPE</b><span>09.15 — 09.16</span></div><i>→</i><div><b>KIX</b><span>09.16 — 09.22</span></div></div><p>香港 3 晚・大阪 6 晚・京都 1 晚</p></aside>
       </section>
 
-      <section className="overview section" id="overview">
-        <div className="section-heading"><p>TRIP OVERVIEW</p><h2>三座城市，三種旅行節奏</h2><span className="yiyi-only">這是旅行骨架：確定的先放好，還沒決定的誠實標記。</span></div>
-        <div className="route-line">
-          <article className="route-stop hongkong"><i>01</i><div><strong>香港</strong><span>9/12 — 9/15</span></div></article><div className="route-connector"><span>✈</span></div>
-          <article className="route-stop osaka"><i>02</i><div><strong>大阪</strong><span>9/16 — 9/22・住宿基地</span></div></article><div className="route-connector"><span>↗</span></div>
-          <article className="route-stop kyoto"><i>03</i><div><strong>京都</strong><span>9/19 — 9/20・兩天一夜</span></div></article>
-        </div>
-        <div className="stay-strip">
-          <div><span>香港住宿</span><strong>Page 148, 晉緻酒店</strong><small>9/12 — 9/15</small></div>
-          <div><span>USJ 住宿</span><strong>日本環球影城園前飯店</strong><small>9/16 — 9/18</small></div>
-          <div><span>大阪住宿・全程保留</span><strong>Chuan House Dotonbori</strong><small>9/18 — 9/22</small></div>
-          <div className="stay-overlap"><span>京都住宿・額外一晚</span><strong>Kyohotel Kishotei Goshominami</strong><small>9/19 — 9/20</small><em>與大阪住宿重疊是刻意安排</em></div>
-        </div>
-      </section>
+      <section className="section" id="overview"><div className="section-heading"><p>OVERVIEW</p><h2>行程總覽</h2></div><div className="city-doors"><a href="#itinerary" onClick={() => setCity("香港")}><span>01</span><b>香港</b><small>09.12 — 09.15</small></a><a href="#itinerary" onClick={() => setCity("大阪")}><span>02</span><b>大阪</b><small>09.16 — 09.22</small></a><a href="#itinerary" onClick={() => setCity("京都")}><span>03</span><b>京都</b><small>09.19 — 09.20</small></a></div></section>
 
-      <section className="transport section" id="transport">
-        <div className="section-heading"><p>FLIGHTS & TRANSPORT</p><h2>航班與主要移動</h2><span className="yiyi-only">先保留必要的移動骨架；班次與細節確認後再補，不用現在把每一站綁死。</span></div>
-        <div className="transport-grid flights-grid">
-          <article><small>09.12・HX253・香港航空</small><strong>台北 TPE → 香港 HKG</strong><span><b>12:15</b> 起飛　→　<b>14:15</b> 抵達</span></article>
-          <article><small>09.15・JX234・星宇航空</small><strong>香港 HKG → 台北 TPE</strong><span><b>11:20</b> 起飛　→　<b>13:20</b> 抵達</span></article>
-          <article><small>09.16・JX820・星宇航空</small><strong>台北 TPE → 大阪 KIX</strong><span><b>08:30</b> 起飛　→　<b>12:15</b> 抵達</span></article>
-          <article><small>09.22・JX823・星宇航空</small><strong>大阪 KIX → 台北 TPE</strong><span><b>15:10</b> 起飛　→　<b>17:05</b> 抵達</span></article>
-          <article className="rail-card"><small>09.19–20・京都</small><strong>大阪 ⇄ 京都</strong><span>輕裝移動，不帶大件行李</span></article>
-        </div>
-      </section>
+      <section className="section transport" id="transport"><div className="section-heading"><p>TRANSPORT</p><h2>交通</h2></div><div className="transport-grid"><article><small>09.12</small><h3>TPE → HKG</h3><p>香港航空 HX253</p><b>12:15 → 14:15</b></article><article><small>09.15</small><h3>HKG → TPE</h3><p>星宇航空 JX234</p><b>11:20 → 13:20</b></article><article><small>09.16</small><h3>TPE → KIX</h3><p>星宇航空 JX820</p><b>08:30 → 12:15</b></article><article><small>09.22</small><h3>KIX → TPE</h3><p>星宇航空 JX823</p><b>15:10 → 17:05</b></article></div></section>
 
-      <section className="itinerary section" id="itinerary">
-        <div className="section-heading split"><div><p>DAILY ITINERARY</p><h2>每日行程</h2></div><span className="yiyi-only">點開卡片查看細節、備案與安全線</span></div>
-        <div className="filters" role="group" aria-label="依城市篩選">{cityFilters.map((item) => <button key={item} className={city === item ? "active" : ""} onClick={() => setCity(item)}>{item}</button>)}</div>
-        <div className="day-list">{filteredDays.map((item) => {
-          const open = expanded === item.day;
-          return <article className={`day-card ${item.city === "香港" ? "hongkong" : item.city === "大阪" ? "osaka" : "kyoto"} ${open ? "open" : ""}`} key={item.day}>
-            <button className="day-summary" onClick={() => mode === "yiyi" && setExpanded(open ? null : item.day)} aria-expanded={mode === "yiyi" && open}>
-              <span className="day-date">{item.date}<small>星期{item.weekday}</small></span><span className="day-number"><small>DAY</small>{String(item.day).padStart(2, "0")}</span>
-              <span className="day-main"><small>{item.city}</small><strong>{item.title}</strong><em>{item.summary}</em></span><span className={`status status-${item.status}`}>{item.status}</span><span className="expand yiyi-only">{open ? "−" : "+"}</span>
-            </button>
-            {mode === "yiyi" && open && <div className="day-details"><div className="chips">{item.highlights.map((x) => <span key={x}>{x}</span>)}</div>{item.note && <p><b>NOTE</b>{item.note}</p>}</div>}
-          </article>;
-        })}</div>
-      </section>
+      <section className="section itinerary" id="itinerary"><div className="section-heading split"><div><p>DAY BY DAY</p><h2>每日行程</h2></div><div className="filters">{cityFilters.map((item) => <button key={item} className={city === item ? "active" : ""} onClick={() => setCity(item)}>{item}</button>)}</div></div><div className="day-list">{filteredDays.map((item) => <article key={item.day} className={`day-card ${expanded === item.day ? "expanded" : ""}`}><button className="day-card-main" onClick={() => setExpanded(expanded === item.day ? null : item.day)}><div className="day-number"><small>DAY</small><strong>{String(item.day).padStart(2,"0")}</strong></div><div className="day-date"><b>{item.date}</b><span>週{item.weekday}・{item.city}</span></div><div className="day-title"><h3>{item.title}</h3><p>{item.summary}</p></div><span className={`status ${item.status}`}>{item.status}</span><i>{expanded === item.day ? "−" : "+"}</i></button>{expanded === item.day && <div className="day-detail"><div>{item.highlights.map((h) => <span key={h}>{h}</span>)}</div>{item.note && <p>{item.note}</p>}</div>}</article>)}</div></section>
 
-      <section className="prep section" id="prep">
-        <div className="section-heading split">
-          <div><p>BEFORE THE TRIP</p><h2>行前準備 Checklist</h2></div>
-          <div className="prep-progress" aria-label={`已完成 ${prepProgress} 項，共 ${visiblePrep.length} 項`}><strong>{prepProgress}<small> / {visiblePrep.length}</small></strong><span>已完成</span></div>
-        </div>
-        <p className="prep-intro mode-copy mode-copy-517">先一起確認會影響行程的四件事；打包用品之後再整理。</p>
-        <p className="prep-intro mode-copy mode-copy-yiyi">目前先列需要提前處理、會影響行程的事項。衣物、充電線與保養品等打包清單，接近出發時再加入。</p>
-        <div className="prep-list">{visiblePrep.map((item) => {
-          const done = completedPrep.has(item.id);
-          return <label className={`prep-item ${done ? "done" : ""}`} key={item.id}>
-            <input type="checkbox" checked={done} onChange={() => togglePrep(item.id)} />
-            <span className="checkmark" aria-hidden="true">{done ? "✓" : ""}</span>
-            <span className="prep-copy"><small>{item.category}</small><strong>{item.title}</strong><em className="yiyi-only">{item.detail}</em></span>
-          </label>;
-        })}</div>
-        <p className="prep-note yiyi-only">勾選進度會記在目前裝置；換一台電腦或瀏覽器時不會自動同步。</p>
-      </section>
+      <section className="section prep" id="prep"><div className="section-heading split"><div><p>BEFORE WE GO</p><h2>行前準備</h2></div><span>{prepProgress} / {visiblePrep.length} 完成</span></div><div className="prep-grid">{visiblePrep.map((item) => <article key={item.id} className={completedPrep.has(item.id) ? "done" : ""}><button onClick={() => togglePrep(item.id)} aria-pressed={completedPrep.has(item.id)}><span>{completedPrep.has(item.id) ? "✓" : ""}</span><div><small>{item.category}</small><h3>{item.title}</h3><p>{item.detail}</p></div></button></article>)}</div></section>
 
-      <section className="usj section yiyi-only" id="usj">
-        <div className="usj-copy"><p>UNIVERSAL STUDIOS JAPAN</p><h2>兩日攻略，一天衝刺、一天過生日。</h2><span>9/17 用快速通關完成核心目標；9/18 把力氣留給拍照、補遺與喜歡的周邊。</span></div>
-        <div className="usj-grid">
-          <article><small>DAY 06・策略日</small><h3>開園前 1–1.5 小時到</h3><ul><li>直衝超級任天堂世界</li><li>能量手環與小遊戲</li><li>飛天翼龍・好萊塢美夢</li><li>晚上補任天堂與哈利波特夜景</li></ul></article>
-          <article><small>DAY 07・生日</small><h3>不用再跟時間賽跑</h3><ul><li>魔法師風穿搭拍照</li><li>芙莉蓮餐飲候選</li><li>補買前一天猶豫的周邊</li><li>晚間移動至道頓堀</li></ul></article>
-          <aside><span>CHECK</span><strong>星星爆米花桶</strong><p>只買五週年新版。版本與兌換券規則尚未核實。</p></aside>
-        </div>
-      </section>
+      <section className="section usj yiyi-only" id="usj"><div className="section-heading"><p>UNIVERSAL STUDIOS JAPAN</p><h2>USJ</h2></div><div className="usj-grid"><article><small>DAY 6・09.17</small><h3>高強度攻略日</h3><p>開園前 1–1.5 小時抵達，直衝任天堂世界；快速通關完成核心設施，晚上看哈利波特夜景。</p></article><article><small>DAY 7・09.18</small><h3>生日・輕鬆拍</h3><p>拍照、補買周邊與芙莉蓮候選；不追求全制霸。</p></article><aside><b>已購</b><p>Express Pass 8・Minecart &amp; Flying Dinosaur Special</p></aside></div></section>
 
-      <section className="decisions section yiyi-only" id="decisions">
-        <div className="section-heading"><p>REVIEW TOGETHER</p><h2>接下來，只要決定這幾題</h2><span>不用一次把整趟旅程規劃完；先解掉會影響訂房與買票的選項。</span></div>
-        <div className="decision-grid">{decisions.map((item, index) => <article className={item.tone} key={item.title}><span>{String(index + 1).padStart(2, "0")}</span><h3>{item.title}</h3><p>{item.detail}</p><small>{item.who}</small></article>)}</div>
-      </section>
-      <footer><div><strong>香港日本行 2026</strong><span>航班與錢錢更新・2026.08.09</span></div><p className="yiyi-only">四間住宿與四段航班已確認；USJ 入場券 8/16 開買。</p><p className="mode-copy mode-copy-517">一一 × 517</p></footer>
+      <section className="section decisions yiyi-only" id="decisions"><div className="section-heading"><p>OPEN ITEMS</p><h2>待決定</h2></div><div className="decision-grid">{decisions.map((item) => <article key={item.title} className={item.tone}><small>{item.who}</small><h3>{item.title}</h3><p>{item.detail}</p></article>)}</div></section>
+
+      <footer><span>HK ⇢ JP</span><p>香港日本行 2026</p></footer>
     </main>
   );
 }
