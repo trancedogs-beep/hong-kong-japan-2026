@@ -1,0 +1,51 @@
+/* Small static-site refinements for the trip overview and flight cards. */
+.route-line.route-line-four{
+  grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr);
+  gap:0;
+}
+.route-line-four .route-stop{min-width:0}
+.route-line-four .route-stop strong{font-size:28px}
+.route-line-four .route-stop span{font-size:13px;line-height:1.55}
+
+.transport-grid article{min-height:165px}
+.transport-grid small{
+  font-size:14px;
+  line-height:1.5;
+  letter-spacing:.1em;
+  font-weight:700;
+}
+.transport-grid strong{
+  margin:15px 0 10px;
+  font-size:24px;
+  line-height:1.35;
+}
+.transport-grid span{
+  font-size:14px;
+  line-height:1.7;
+}
+.transport-grid span b{font-size:18px}
+
+@media (max-width:980px){
+  .route-line.route-line-four{
+    grid-template-columns:1fr;
+    gap:14px;
+    margin-top:45px;
+  }
+  .route-line-four .route-connector{
+    width:1px;
+    height:28px;
+    margin-left:31px;
+    background:linear-gradient(180deg,var(--line),rgba(255,255,255,.5),var(--line));
+  }
+  .route-line-four .route-connector span{font-size:12px}
+}
+
+@media (max-width:680px){
+  .transport-grid article{min-height:150px;padding:20px}
+  .transport-grid small{font-size:13px;letter-spacing:.08em}
+  .transport-grid strong{font-size:21px}
+  .transport-grid span{font-size:13px}
+  .transport-grid span b{font-size:17px}
+  .route-line-four .route-stop strong{font-size:26px}
+  .route-line-four .route-stop span{font-size:12px}
+}
