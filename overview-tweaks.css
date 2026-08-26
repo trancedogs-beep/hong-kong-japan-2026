@@ -25,6 +25,41 @@
 }
 .transport-grid span b{font-size:18px}
 
+/* Allow normal trip content to be selected and copied. */
+body,
+main,
+section,
+article,
+aside,
+header,
+footer,
+p,
+span,
+small,
+strong,
+em,
+b,
+h1,
+h2,
+h3,
+li,
+div{
+  -webkit-user-select:text;
+  user-select:text;
+}
+
+/* Interactive controls should still behave like controls instead of selectable text. */
+button,
+.mode-switch,
+.filters,
+.topbar nav,
+.hero-actions,
+.mobile-money,
+.brand{
+  -webkit-user-select:none;
+  user-select:none;
+}
+
 @media (max-width:980px){
   .route-line.route-line-four{
     grid-template-columns:1fr;
