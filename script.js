@@ -6,6 +6,40 @@
   const modeButtons = [...document.querySelectorAll("[data-mode]")];
   const prepItems = [...document.querySelectorAll(".prep-item[data-id]")];
 
+  // Keep the first Hong Kong night as a flexible Plan A: arrival -> Oi Man Sang -> harbour -> drinks.
+  const day1 = document.querySelector('.day-card[data-day="1"]');
+  if (day1) {
+    const title = day1.querySelector(".day-main strong");
+    const summary = day1.querySelector(".day-main em");
+    const status = day1.querySelector(".status");
+    const details = day1.querySelector(".day-details");
+    if (title) title.textContent = "抵達香港・愛文生・維港初夜";
+    if (summary) summary.textContent = "14:15 抵達香港，約 16:00–17:00 完成入住後開始晚間行程。";
+    if (status) status.textContent = "PLAN A";
+    if (details) {
+      details.innerHTML = `
+        <div class="chips">
+          <span>14:15・HX253 抵達 HKG</span>
+          <span>機場 → Page148：TAXI / A22 二選一</span>
+          <span>16:00–17:00・Check-in 完成</span>
+          <span>17:00 起・愛文生大排檔</span>
+          <span>深水埗</span>
+          <span>尖沙咀・星光大道</span>
+          <span>維多利亞港夜景</span>
+          <span>海旁小酌</span>
+        </div>
+        <p><b>PLAN A</b>第一晚只鎖「吃飯＋維港」。愛文生以 17:00 左右抵達為目標，排隊與用餐抓到約 19:30；若班機、入境或晚餐延遲，不需要趕 20:00 燈光秀，吃完再慢慢去維港即可。機場到飯店當天依體力決定 TAXI 或 A22。</p>`;
+    }
+  }
+
+  // Oi Man Sang has moved to Day 1, so don't duplicate it as a Day 3 must-do.
+  const day3 = document.querySelector('.day-card[data-day="3"]');
+  if (day3) {
+    day3.querySelectorAll(".chips span").forEach(chip => {
+      if (chip.textContent.trim() === "愛文生") chip.remove();
+    });
+  }
+
   function loadPrep() {
     try { const data = JSON.parse(localStorage.getItem(PREP_KEY) || "[]"); return new Set(Array.isArray(data) ? data : []); }
     catch { return new Set(); }
