@@ -1,58 +1,155 @@
 (() => {
   const app = document.getElementById("app");
   if (!app) return;
-  const MODE_KEY = "trip-view-mode-v2";
+
   const PREP_KEY = "trip-prep-v1";
-  const modeButtons = [...document.querySelectorAll("[data-mode]")];
+  const ITINERARY_KEY = "trip-itinerary-board-v1";
   const prepItems = [...document.querySelectorAll(".prep-item[data-id]")];
 
-  // Keep the first Hong Kong night as a flexible Plan A: arrival -> Oi Man Sang -> harbour -> drinks.
-  const day1 = document.querySelector('.day-card[data-day="1"]');
-  if (day1) {
-    const title = day1.querySelector(".day-main strong");
-    const summary = day1.querySelector(".day-main em");
-    const status = day1.querySelector(".status");
-    const details = day1.querySelector(".day-details");
-    if (title) title.textContent = "抵達香港・愛文生・維港初夜";
-    if (summary) summary.textContent = "14:15 抵達香港，約 16:00–17:00 完成入住後開始晚間行程。";
-    if (status) status.textContent = "PLAN A";
-    if (details) {
-      details.innerHTML = `
-        <div class="chips">
-          <span>14:15・HX253 抵達 HKG</span>
-          <span>機場 → Page148：TAXI / A22 二選一</span>
-          <span>16:00–17:00・Check-in 完成</span>
-          <span>17:00 起・愛文生大排檔</span>
-          <span>深水埗</span>
-          <span>尖沙咀・星光大道</span>
-          <span>維多利亞港夜景</span>
-          <span>海旁小酌</span>
-        </div>
-        <p><b>PLAN A</b>第一晚只鎖「吃飯＋維港」。愛文生以 17:00 左右抵達為目標，排隊與用餐抓到約 19:30；若班機、入境或晚餐延遲，不需要趕 20:00 燈光秀，吃完再慢慢去維港即可。機場到飯店當天依體力決定 TAXI 或 A22。</p>`;
-    }
+  const defaultItems = [
+    {id:"hk-flight-in",day:1,title:"HX253・TPE → HKG・14:15 抵達",type:"fixed"},
+    {id:"page148-in",day:1,title:"Page 148・Check-in",type:"fixed"},
+    {id:"united-hair",day:1,title:"United Hair Shop・21:30",type:"yiyi"},
+    {id:"oi-man-sang",day:1,title:"愛文生・23:00",type:"yiyi"},
+    {id:"avenue-stars",day:1,title:"星光大道",type:"unsure"},
+
+    {id:"noc",day:2,title:"NOC Coffee",type:"f517"},
+    {id:"bakehouse",day:2,title:"Bakehouse",type:"yiyi"},
+    {id:"hashtag-b",day:2,title:"Hashtag B",type:"yiyi"},
+    {id:"the24st",day:2,title:"THE 24 . ST・買伴手禮",type:"yiyi"},
+    {id:"fine-foods",day:2,title:"帝苑餅店 FINE FOODS",type:"yiyi"},
+    {id:"kams",day:2,title:"甘牌燒鵝",type:"yiyi"},
+    {id:"central-free",day:2,title:"中環隨便玩",type:"unsure"},
+
+    {id:"fineprint",day:3,title:"FINEPRINT",type:"f517"},
+    {id:"tai-hang",day:3,title:"大坑散步",type:"unsure"},
+    {id:"stanley",day:3,title:"赤柱廣場",type:"unsure"},
+    {id:"le-petit",day:3,title:"Le Petit Salon・Stanley",type:"unsure"},
+
+    {id:"aus-dairy",day:4,title:"澳洲牛奶公司・07:30 起早餐",type:"yiyi"},
+    {id:"hk-airport",day:4,title:"前往香港機場",type:"fixed"},
+    {id:"hk-flight-out",day:4,title:"JX234・HKG → TPE・11:20",type:"fixed"},
+    {id:"taipei-reset",day:4,title:"回台整理日本行李＋洗衣服",type:"fixed"},
+
+    {id:"jp-flight-in",day:5,title:"JX820・TPE → KIX・12:15 抵達",type:"fixed"},
+    {id:"park-front",day:5,title:"日本環球影城園前飯店・Check-in",type:"fixed"},
+    {id:"donki-dotonbori",day:5,title:"唐吉軻德・道頓堀店",type:"unsure"},
+    {id:"lush",day:5,title:"LUSH",type:"unsure"},
+    {id:"osaka-wander",day:5,title:"隨便逛＋早點回飯店休息",type:"unsure"},
+
+    {id:"usj-fast",day:6,title:"USJ・快速通關攻略日",type:"fixed"},
+    {id:"usj-nintendo",day:6,title:"超級任天堂世界",type:"yiyi"},
+    {id:"usj-flying",day:6,title:"飛天翼龍",type:"yiyi"},
+    {id:"usj-hollywood",day:6,title:"好萊塢美夢",type:"yiyi"},
+
+    {id:"park-front-bag",day:7,title:"園前飯店退房・行李寄櫃檯",type:"fixed"},
+    {id:"usj-chill",day:7,title:"USJ・無快速通關 Chill Day",type:"fixed"},
+    {id:"usj-halloween",day:7,title:"Halloween／生日拍照",type:"yiyi"},
+    {id:"leave-usj",day:7,title:"離開 USJ・領行李",type:"fixed"},
+    {id:"chuan-in",day:7,title:"Chuan House Dotonbori・入住",type:"fixed"},
+
+    {id:"osaka-kyoto",day:8,title:"大阪 → 京都",type:"fixed"},
+    {id:"kishotei-in",day:8,title:"喜招邸 御所南・入住",type:"fixed"},
+    {id:"kamogawa",day:8,title:"鴨川散步",type:"unsure"},
+
+    {id:"arashiyama",day:9,title:"嵐山",type:"f517"},
+    {id:"togetsukyo",day:9,title:"渡月橋",type:"f517"},
+    {id:"kyoto-osaka",day:9,title:"京都 → 大阪・回 Chuan House",type:"fixed"},
+
+    {id:"bic-camera",day:10,title:"BIC CAMERA・大阪自由逛",type:"yiyi"},
+    {id:"muji",day:10,title:"無印良品・必去",type:"f517"},
+    {id:"osaka-free",day:10,title:"大阪自由逛",type:"unsure"},
+
+    {id:"last-shopping",day:11,title:"最後採買／逛街",type:"unsure"},
+    {id:"kix-transfer",day:11,title:"前往關西機場",type:"fixed"},
+    {id:"jp-flight-out",day:11,title:"JX823・KIX → TPE・15:10",type:"fixed"}
+  ];
+
+  function cloneDefaults() { return defaultItems.map(item => ({...item})); }
+  function loadItinerary() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ITINERARY_KEY) || "null");
+      if (Array.isArray(saved) && saved.length) return saved;
+    } catch {}
+    return cloneDefaults();
+  }
+  let itinerary = loadItinerary();
+
+  function saveItinerary() { localStorage.setItem(ITINERARY_KEY, JSON.stringify(itinerary)); }
+  function typeLabel(type) {
+    return {fixed:"固定", yiyi:"一一必去", unsure:"不確定", f517:"517 必去"}[type] || "行程";
+  }
+  function renderItinerary() {
+    document.querySelectorAll(".trip-dropzone").forEach(zone => zone.innerHTML = "");
+    itinerary.forEach(item => {
+      const zone = document.querySelector(`.trip-dropzone[data-day="${item.day}"]`);
+      if (!zone) return;
+      const card = document.createElement("div");
+      card.className = `trip-item trip-item-${item.type}`;
+      card.dataset.id = item.id;
+      card.draggable = item.type !== "fixed";
+      card.innerHTML = `<span class="trip-grip" aria-hidden="true">${item.type === "fixed" ? "●" : "⠿"}</span><span class="trip-item-copy"><small>${typeLabel(item.type)}</small><strong></strong></span>${item.type === "fixed" ? "" : '<button class="trip-remove" type="button" aria-label="刪除行程">×</button>'}`;
+      card.querySelector("strong").textContent = item.title;
+      zone.appendChild(card);
+    });
+    bindTripItems();
   }
 
-  // Oi Man Sang has moved to Day 1, so don't duplicate it as a Day 3 must-do.
-  const day3 = document.querySelector('.day-card[data-day="3"]');
-  if (day3) {
-    day3.querySelectorAll(".chips span").forEach(chip => {
-      if (chip.textContent.trim() === "愛文生") chip.remove();
+  let draggingId = null;
+  function bindTripItems() {
+    document.querySelectorAll('.trip-item[draggable="true"]').forEach(card => {
+      card.addEventListener("dragstart", event => {
+        draggingId = card.dataset.id;
+        card.classList.add("dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", draggingId);
+      });
+      card.addEventListener("dragend", () => { draggingId = null; card.classList.remove("dragging"); document.querySelectorAll(".trip-dropzone").forEach(z=>z.classList.remove("drag-over")); });
     });
+    document.querySelectorAll(".trip-remove").forEach(button => button.addEventListener("click", () => {
+      const id = button.closest(".trip-item")?.dataset.id;
+      itinerary = itinerary.filter(item => item.id !== id);
+      saveItinerary(); renderItinerary();
+    }));
   }
+
+  document.querySelectorAll(".trip-dropzone").forEach(zone => {
+    zone.addEventListener("dragover", event => { if (!draggingId) return; event.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", event => {
+      event.preventDefault(); zone.classList.remove("drag-over");
+      const id = draggingId || event.dataTransfer.getData("text/plain");
+      const item = itinerary.find(x => x.id === id);
+      if (!item || item.type === "fixed") return;
+      item.day = Number(zone.dataset.day);
+      saveItinerary(); renderItinerary();
+    });
+  });
+
+  document.getElementById("add-trip-item")?.addEventListener("submit", event => {
+    event.preventDefault();
+    const titleInput = document.getElementById("trip-item-title");
+    const title = titleInput.value.trim();
+    if (!title) return;
+    itinerary.push({
+      id:`custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+      day:Number(document.getElementById("trip-item-day").value),
+      title,
+      type:document.getElementById("trip-item-type").value
+    });
+    saveItinerary(); renderItinerary(); titleInput.value = ""; titleInput.focus();
+  });
+
+  document.getElementById("reset-trip-items")?.addEventListener("click", () => {
+    if (!window.confirm("要把行程板恢復成網站預設版本嗎？你在這台裝置上的拖曳與新增會被清掉。")) return;
+    itinerary = cloneDefaults(); saveItinerary(); renderItinerary();
+  });
 
   function loadPrep() {
     try { const data = JSON.parse(localStorage.getItem(PREP_KEY) || "[]"); return new Set(Array.isArray(data) ? data : []); }
     catch { return new Set(); }
   }
   let completed = loadPrep();
-
-  function currentMode() { return localStorage.getItem(MODE_KEY) === "yiyi" ? "yiyi" : "517"; }
-  function updatePrepProgress() {
-    const visible = currentMode() === "517" ? prepItems.filter(x => x.dataset.shared === "true") : prepItems;
-    const done = visible.filter(x => completed.has(x.dataset.id)).length;
-    document.getElementById("prep-done").textContent = done;
-    document.getElementById("prep-total").textContent = visible.length;
-  }
   function renderPrep() {
     prepItems.forEach(item => {
       const checked = completed.has(item.dataset.id);
@@ -60,29 +157,22 @@
       const input = item.querySelector("input"); if (input) input.checked = checked;
       const mark = item.querySelector(".checkmark"); if (mark) mark.textContent = checked ? "✓" : "";
     });
-    updatePrepProgress();
+    const done = prepItems.filter(x => completed.has(x.dataset.id)).length;
+    const doneEl = document.getElementById("prep-done"); const totalEl = document.getElementById("prep-total");
+    if (doneEl) doneEl.textContent = done; if (totalEl) totalEl.textContent = prepItems.length;
   }
-  function setMode(mode) {
-    localStorage.setItem(MODE_KEY, mode);
-    app.classList.toggle("view-517", mode === "517"); app.classList.toggle("view-yiyi", mode === "yiyi");
-    modeButtons.forEach(btn => { const active = btn.dataset.mode === mode; btn.classList.toggle("active", active); btn.setAttribute("aria-pressed", String(active)); });
-    if (mode === "517") document.querySelectorAll(".day-card.open").forEach(card => closeDay(card));
-    updatePrepProgress();
-  }
-  function closeDay(card) { card.classList.remove("open"); const d=card.querySelector(".day-details"); if(d)d.hidden=true; const b=card.querySelector(".day-summary"); if(b)b.setAttribute("aria-expanded","false"); const x=card.querySelector(".expand"); if(x)x.textContent="+"; }
-  function toggleDay(card) { if (currentMode() !== "yiyi") return; const open=card.classList.toggle("open"); const d=card.querySelector(".day-details"); if(d)d.hidden=!open; const b=card.querySelector(".day-summary"); if(b)b.setAttribute("aria-expanded",String(open)); const x=card.querySelector(".expand"); if(x)x.textContent=open?"−":"+"; }
+  prepItems.forEach(item => item.querySelector("input")?.addEventListener("change",()=>{
+    const id=item.dataset.id; if(completed.has(id)) completed.delete(id); else completed.add(id);
+    localStorage.setItem(PREP_KEY, JSON.stringify([...completed])); renderPrep();
+  }));
+
   function filterCity(city) {
     document.querySelectorAll("[data-filter]").forEach(b=>b.classList.toggle("active",b.dataset.filter===city));
-    document.querySelectorAll(".day-card[data-city]").forEach(card=>{card.hidden = city!=="全部" && card.dataset.city!==city;});
+    document.querySelectorAll(".trip-day[data-city]").forEach(card=>{card.hidden = city!=="全部" && card.dataset.city!==city;});
   }
-
-  modeButtons.forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
-  document.getElementById("go-itinerary")?.addEventListener("click", () => document.getElementById("itinerary")?.scrollIntoView({behavior:"smooth"}));
   document.querySelectorAll("[data-filter]").forEach(btn => btn.addEventListener("click",()=>filterCity(btn.dataset.filter)));
   document.querySelectorAll(".city-door").forEach(a => a.addEventListener("click",()=>filterCity(a.dataset.city)));
-  document.querySelectorAll(".day-card .day-summary").forEach(btn => btn.addEventListener("click",()=>toggleDay(btn.closest(".day-card"))));
-  prepItems.forEach(item => item.querySelector("input")?.addEventListener("change",()=>{ const id=item.dataset.id; if(completed.has(id)) completed.delete(id); else completed.add(id); localStorage.setItem(PREP_KEY, JSON.stringify([...completed])); renderPrep(); }));
+  document.getElementById("go-itinerary")?.addEventListener("click", () => document.getElementById("itinerary")?.scrollIntoView({behavior:"smooth"}));
 
-  setMode(currentMode()); renderPrep(); filterCity("全部");
-  const day6=document.querySelector('.day-card[data-day="6"]'); if(day6 && currentMode()==="yiyi") toggleDay(day6);
+  renderItinerary(); renderPrep(); filterCity("全部");
 })();
