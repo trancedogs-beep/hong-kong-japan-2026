@@ -67,7 +67,14 @@
   </section>
 
   <section class="itinerary section" id="itinerary">
-    <div class="section-heading split"><div><p>DAILY ITINERARY</p><h2>可拖曳行程板</h2></div><span>可變行程可跨日期拖曳；黑色固定行程不可移動。所有調整只記在目前瀏覽器。</span></div>
+    <div class="section-heading split"><div><p>DAILY ITINERARY</p><h2>可拖曳行程板</h2></div><span>可變行程可跨日期拖曳；黑色固定行程不可移動。建立共編連結後會自動同步。</span></div>
+    <div class="sync-panel" id="sync-panel" data-state="local">
+      <div class="sync-copy" role="status" aria-live="polite">
+        <i class="sync-dot" aria-hidden="true"></i>
+        <div><strong id="sync-status">尚未啟用同步</strong><span id="sync-detail">目前的調整只儲存在這台裝置</span></div>
+      </div>
+      <button class="sync-share" id="share-trip" type="button">建立共同編輯連結</button>
+    </div>
     <div class="itinerary-legend" aria-label="行程類型圖例">
       <span><i class="legend-dot fixed"></i>固定行程</span>
       <span><i class="legend-dot yiyi"></i>一一必去</span>
@@ -121,7 +128,7 @@
       <label class="prep-item" data-id="insurance"><input type="checkbox"><span class="checkmark"></span><span class="prep-copy"><small>票券與預約</small><strong>確認旅平險／不便險</strong><em>確認保障期間完整涵蓋 9/12–9/22 與香港、日本兩地。</em></span></label>
       <label class="prep-item" data-id="airport-routes"><input type="checkbox"><span class="checkmark"></span><span class="prep-copy"><small>資料確認</small><strong>確認三段機場交通</strong><em>台灣出發、香港機場往返，以及大阪機場往返住宿的移動方式。</em></span></label>
     </div>
-    <p class="prep-note">勾選進度與行程拖曳結果會記在目前裝置；換瀏覽器或換裝置不會自動同步。</p>
+    <p class="prep-note">建立共同編輯連結後，Checklist 與行程板會自動儲存並同步到另一台裝置。</p>
   </section>
 
   <section class="usj section" id="usj">
@@ -135,6 +142,6 @@
   </section>
   <footer><div><strong>香港日本行 2026</strong><span>GitHub Pages 靜態版・2026.09.06</span></div><p>一一 × 517</p></footer>
 </main>
-<script src="script.js"></script>
+<script type="module" src="script.js?v=20260907-sync1"></script>
 </body>
 </html>

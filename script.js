@@ -1,3 +1,15 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  onSnapshot,
+  runTransaction,
+  serverTimestamp,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
 (() => {
   const app = document.getElementById("app");
   if (!app) return;
@@ -5,6 +17,35 @@
   const PREP_KEY = "trip-prep-v1";
   const ITINERARY_KEY = "trip-itinerary-board-v2";
   const prepItems = [...document.querySelectorAll(".prep-item[data-id]")];
+  const syncPanel = document.getElementById("sync-panel");
+  const syncStatus = document.getElementById("sync-status");
+  const syncDetail = document.getElementById("sync-detail");
+  const shareButton = document.getElementById("share-trip");
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDaOMuNtawMPrXShXRpA-ZVRVSCfP0ECqE",
+    authDomain: "hong-kong-japan-2026.firebaseapp.com",
+    projectId: "hong-kong-japan-2026",
+    storageBucket: "hong-kong-japan-2026.firebasestorage.app",
+    messagingSenderId: "1028782809441",
+    appId: "1:1028782809441:web:839b0e1f2f5e3dd5d66520"
+  };
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const db = getFirestore(firebaseApp);
+  const ROOM_PATTERN = /^[A-Za-z0-9_-]{32}$/;
+  const requestedRoom = new URL(window.location.href).searchParams.get("trip") || "";
+  let activeRoomId = ROOM_PATTERN.test(requestedRoom) ? requestedRoom : "";
+  let saveTimer = null;
+  const cloud = {
+    enabled: false,
+    connecting: false,
+    saving: false,
+    dirty: false,
+    revision: 0,
+    roomRef: null,
+    unsubscribe: null
+  };
 
   const defaultItems = [
     {id:"hk-flight-in",day:1,title:"HX253・TPE → HKG・14:15 抵達",type:"fixed"},{id:"page148-in",day:1,title:"Page 148・Check-in",type:"fixed"},{id:"united-hair",day:1,title:"United Hair Shop・21:30",type:"yiyi"},{id:"oi-man-sang",day:1,title:"愛文生・23:00",type:"unsure"},{id:"avenue-stars",day:1,title:"星光大道",type:"yiyi"},
@@ -21,10 +62,126 @@
   ];
 
   function cloneDefaults(){return defaultItems.map(item=>({...item}))}
-  function loadItinerary(){try{const saved=JSON.parse(localStorage.getItem(ITINERARY_KEY)||"null");if(Array.isArray(saved)&&saved.length)return saved}catch{}return cloneDefaults()}
+  function storageKey(key){return activeRoomId?`${key}:${activeRoomId}`:key}
+  function readStored(key,fallback="null"){return localStorage.getItem(storageKey(key))??(activeRoomId?localStorage.getItem(key):null)??fallback}
+  function loadItinerary(){try{const saved=JSON.parse(readStored(ITINERARY_KEY));if(Array.isArray(saved)&&saved.length)return saved}catch{}return cloneDefaults()}
   let itinerary=loadItinerary();
-  function saveItinerary(){localStorage.setItem(ITINERARY_KEY,JSON.stringify(itinerary))}
+  function saveItinerary(){localStorage.setItem(storageKey(ITINERARY_KEY),JSON.stringify(itinerary));scheduleCloudSave()}
   function typeLabel(type){return {fixed:"固定",yiyi:"一一必去",unsure:"自由更動",f517:"517 必去"}[type]||"行程"}
+
+  function setSyncState(state,title,detail){
+    if(syncPanel)syncPanel.dataset.state=state;
+    if(syncStatus)syncStatus.textContent=title;
+    if(syncDetail)syncDetail.textContent=detail;
+  }
+  function formatSyncTime(){return `最後更新 ${new Intl.DateTimeFormat("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date())}`}
+  function currentPayload(){return {itinerary:itinerary.map(item=>({...item})),completedPrep:[...completed],schemaVersion:1}}
+  function generateRoomId(){
+    const bytes=new Uint8Array(24);crypto.getRandomValues(bytes);
+    let binary="";bytes.forEach(byte=>{binary+=String.fromCharCode(byte)});
+    return btoa(binary).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
+  }
+  function sharedUrl(){const url=new URL(window.location.href);url.search="";url.searchParams.set("trip",activeRoomId);url.hash="";return url.toString()}
+  async function copySharedUrl(){
+    const url=sharedUrl();
+    try{await navigator.clipboard.writeText(url)}catch{window.prompt("請複製這個共同編輯連結：",url);return}
+    if(shareButton){shareButton.textContent="連結已複製 ✓";setTimeout(()=>{shareButton.textContent="複製共編連結"},1800)}
+  }
+  function sanitizeItinerary(value){
+    if(!Array.isArray(value))return null;
+    const allowedTypes=new Set(["fixed","yiyi","unsure","f517"]);
+    const clean=value.slice(0,100).map(item=>({
+      id:typeof item?.id==="string"?item.id.slice(0,100):"",
+      day:Number(item?.day),
+      title:typeof item?.title==="string"?item.title.slice(0,120):"",
+      type:allowedTypes.has(item?.type)?item.type:"unsure"
+    })).filter(item=>item.id&&item.title&&Number.isInteger(item.day)&&item.day>=1&&item.day<=11);
+    return clean.length?clean:null;
+  }
+  function applyRemoteData(data,fromCompanion=false){
+    const cleanItinerary=sanitizeItinerary(data?.itinerary);
+    const validPrep=Array.isArray(data?.completedPrep)?data.completedPrep.filter(id=>typeof id==="string").slice(0,30):[];
+    if(cleanItinerary)itinerary=cleanItinerary;
+    completed=new Set(validPrep);
+    localStorage.setItem(storageKey(ITINERARY_KEY),JSON.stringify(itinerary));
+    localStorage.setItem(storageKey(PREP_KEY),JSON.stringify([...completed]));
+    renderItinerary();renderPrep();
+    if(fromCompanion)setSyncState("synced","已同步","已收到同行人的最新修改");
+  }
+  function scheduleCloudSave(){
+    if(!cloud.enabled)return;
+    cloud.dirty=true;
+    if(!navigator.onLine){setSyncState("offline","目前離線","調整已存在這台裝置，恢復網路後會自動同步");return}
+    clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,300);
+  }
+  async function flushCloudSave(){
+    if(!cloud.enabled||cloud.saving||!cloud.dirty||!cloud.roomRef)return;
+    if(!navigator.onLine){setSyncState("offline","目前離線","調整已存在這台裝置，恢復網路後會自動同步");return}
+    cloud.dirty=false;cloud.saving=true;
+    const payload=currentPayload();const expectedRevision=cloud.revision;
+    setSyncState("saving","正在同步…","正在把最新調整存到共同行程");
+    try{
+      const nextRevision=await runTransaction(db,async transaction=>{
+        const snapshot=await transaction.get(cloud.roomRef);
+        if(!snapshot.exists()||snapshot.data().revision!==expectedRevision)throw new Error("SYNC_CONFLICT");
+        const revision=expectedRevision+1;
+        transaction.update(cloud.roomRef,{...payload,revision,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+        return revision;
+      });
+      cloud.revision=Math.max(cloud.revision,nextRevision);
+      setSyncState("synced","已同步",formatSyncTime());
+    }catch(error){
+      if(error?.message==="SYNC_CONFLICT"){
+        cloud.dirty=false;
+        try{const newest=await getDoc(cloud.roomRef);if(newest.exists()){cloud.revision=Number(newest.data().revision)||cloud.revision;applyRemoteData(newest.data())}}catch{}
+        setSyncState("conflict","已載入較新版本","同行人剛好也在修改，請再做一次剛才的調整");
+      }else{
+        const retryable=!navigator.onLine||["unavailable","deadline-exceeded","aborted","cancelled","resource-exhausted"].includes(error?.code);
+        cloud.dirty=retryable;
+        setSyncState(navigator.onLine?"error":"offline",navigator.onLine?"同步暫時失敗":"目前離線",retryable?"調整已保存在這台裝置，稍後會再試一次":"請重新整理；若仍失敗，請確認 Firebase 規則與匿名登入設定");
+      }
+    }finally{
+      cloud.saving=false;
+      if(cloud.dirty&&navigator.onLine){clearTimeout(saveTimer);saveTimer=setTimeout(flushCloudSave,1200)}
+    }
+  }
+  async function connectRoom(createIfMissing=false){
+    if(cloud.connecting||cloud.enabled||!activeRoomId)return;
+    cloud.connecting=true;
+    if(shareButton)shareButton.disabled=true;
+    setSyncState("connecting","正在連接共同行程…","第一次連線可能需要幾秒鐘");
+    try{
+      if(!auth.currentUser)await signInAnonymously(auth);
+      cloud.roomRef=doc(db,"sharedTrips",activeRoomId);
+      const snapshot=await getDoc(cloud.roomRef);
+      if(!snapshot.exists()){
+        if(!createIfMissing)throw new Error("ROOM_NOT_FOUND");
+        await setDoc(cloud.roomRef,{...currentPayload(),revision:1,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+        cloud.revision=1;
+      }else{
+        cloud.revision=Number(snapshot.data().revision)||1;
+        applyRemoteData(snapshot.data());
+      }
+      cloud.enabled=true;cloud.dirty=false;
+      if(shareButton)shareButton.textContent="複製共編連結";
+      cloud.unsubscribe=onSnapshot(cloud.roomRef,remote=>{
+        if(!remote.exists())return;
+        const data=remote.data();const revision=Number(data.revision)||0;
+        if(revision<=cloud.revision)return;
+        const fromCompanion=data.updatedBy!==auth.currentUser?.uid;
+        if(cloud.dirty||cloud.saving){
+          if(fromCompanion)setSyncState("saving","偵測到同行人也在修改…","正在確認最新版本");
+          return;
+        }
+        cloud.revision=revision;cloud.dirty=false;
+        applyRemoteData(data,fromCompanion);
+        if(!fromCompanion)setSyncState("synced","已同步",formatSyncTime());
+      },()=>setSyncState("error","即時連線中斷","調整仍保存在這台裝置，請重新整理後再試"));
+      setSyncState("synced","已同步",formatSyncTime());
+    }catch(error){
+      setSyncState("error",error?.message==="ROOM_NOT_FOUND"?"找不到這份共同行程":"無法連上共同行程",error?.message==="ROOM_NOT_FOUND"?"請確認你開啟的是完整的分享連結":"請檢查網路後重新整理頁面");
+    }finally{cloud.connecting=false;if(shareButton)shareButton.disabled=false}
+  }
 
   function renderItinerary(){
     document.querySelectorAll(".trip-dropzone").forEach(zone=>zone.innerHTML="");
@@ -66,13 +223,28 @@
   });
 
   document.getElementById("add-trip-item")?.addEventListener("submit",event=>{event.preventDefault();const titleInput=document.getElementById("trip-item-title");const title=titleInput.value.trim();if(!title)return;itinerary.push({id:`custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,day:Number(document.getElementById("trip-item-day").value),title,type:document.getElementById("trip-item-type").value});saveItinerary();renderItinerary();titleInput.value="";titleInput.focus()});
-  document.getElementById("reset-trip-items")?.addEventListener("click",()=>{if(!window.confirm("要把行程板恢復成網站預設版本嗎？你在這台裝置上的拖曳與新增會被清掉。"))return;itinerary=cloneDefaults();saveItinerary();renderItinerary()});
+  document.getElementById("reset-trip-items")?.addEventListener("click",()=>{const message=cloud.enabled?"要把共同行程板恢復成網站預設版本嗎？這會同步到同行人的裝置。":"要把行程板恢復成網站預設版本嗎？你在這台裝置上的拖曳與新增會被清掉。";if(!window.confirm(message))return;itinerary=cloneDefaults();saveItinerary();renderItinerary()});
 
-  function loadPrep(){try{const data=JSON.parse(localStorage.getItem(PREP_KEY)||"[]");return new Set(Array.isArray(data)?data:[])}catch{return new Set()}}
+  function loadPrep(){try{const data=JSON.parse(readStored(PREP_KEY,"[]"));return new Set(Array.isArray(data)?data:[])}catch{return new Set()}}
   let completed=loadPrep();
   function renderPrep(){prepItems.forEach(item=>{const checked=completed.has(item.dataset.id);item.classList.toggle("done",checked);const input=item.querySelector("input");if(input)input.checked=checked;const mark=item.querySelector(".checkmark");if(mark)mark.textContent=checked?"✓":""});const done=prepItems.filter(x=>completed.has(x.dataset.id)).length;const doneEl=document.getElementById("prep-done"),totalEl=document.getElementById("prep-total");if(doneEl)doneEl.textContent=done;if(totalEl)totalEl.textContent=prepItems.length}
-  prepItems.forEach(item=>item.querySelector("input")?.addEventListener("change",()=>{const id=item.dataset.id;if(completed.has(id))completed.delete(id);else completed.add(id);localStorage.setItem(PREP_KEY,JSON.stringify([...completed]));renderPrep()}));
+  prepItems.forEach(item=>item.querySelector("input")?.addEventListener("change",()=>{const id=item.dataset.id;if(completed.has(id))completed.delete(id);else completed.add(id);localStorage.setItem(storageKey(PREP_KEY),JSON.stringify([...completed]));renderPrep();scheduleCloudSave()}));
   function filterCity(city){document.querySelectorAll("[data-filter]").forEach(b=>b.classList.toggle("active",b.dataset.filter===city));document.querySelectorAll(".trip-day[data-city]").forEach(card=>{card.hidden=city!=="全部"&&card.dataset.city!==city})}
   document.querySelectorAll("[data-filter]").forEach(btn=>btn.addEventListener("click",()=>filterCity(btn.dataset.filter)));document.querySelectorAll(".city-door").forEach(a=>a.addEventListener("click",()=>filterCity(a.dataset.city)));document.getElementById("go-itinerary")?.addEventListener("click",()=>document.getElementById("itinerary")?.scrollIntoView({behavior:"smooth"}));
   renderItinerary();renderPrep();filterCity("全部");
+  shareButton?.addEventListener("click",async()=>{
+    if(cloud.enabled){await copySharedUrl();return}
+    if(!activeRoomId){
+      activeRoomId=generateRoomId();
+      const url=new URL(window.location.href);url.search="";url.searchParams.set("trip",activeRoomId);url.hash="";
+      window.history.replaceState({},"",url);
+      localStorage.setItem(storageKey(ITINERARY_KEY),JSON.stringify(itinerary));
+      localStorage.setItem(storageKey(PREP_KEY),JSON.stringify([...completed]));
+    }
+    await connectRoom(true);
+    if(cloud.enabled)await copySharedUrl();
+  });
+  window.addEventListener("offline",()=>{if(cloud.enabled)setSyncState("offline","目前離線","調整會先存在這台裝置，恢復網路後自動同步")});
+  window.addEventListener("online",()=>{if(cloud.enabled){setSyncState("connecting","網路已恢復","正在確認最新版本");if(cloud.dirty)flushCloudSave();else setSyncState("synced","已同步",formatSyncTime())}});
+  if(activeRoomId){if(shareButton)shareButton.textContent="複製共編連結";connectRoom(false)}
 })();
