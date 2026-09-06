@@ -1,4 +1,4 @@
-/* Small static-site refinements for the trip overview and flight cards. */
+/* Small static-site refinements for the trip overview and editable itinerary. */
 .route-line.route-line-four{
   grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr);
   gap:0;
@@ -8,79 +8,45 @@
 .route-line-four .route-stop span{font-size:13px;line-height:1.55}
 
 .transport-grid article{min-height:165px}
-.transport-grid small{
-  font-size:14px;
-  line-height:1.5;
-  letter-spacing:.1em;
-  font-weight:700;
-}
-.transport-grid strong{
-  margin:15px 0 10px;
-  font-size:24px;
-  line-height:1.35;
-}
-.transport-grid span{
-  font-size:14px;
-  line-height:1.7;
-}
+.transport-grid small{font-size:14px;line-height:1.5;letter-spacing:.1em;font-weight:700}
+.transport-grid strong{margin:15px 0 10px;font-size:24px;line-height:1.35}
+.transport-grid span{font-size:14px;line-height:1.7}
 .transport-grid span b{font-size:18px}
 
-/* Allow normal trip content to be selected and copied. */
-body,
-main,
-section,
-article,
-aside,
-header,
-footer,
-p,
-span,
-small,
-strong,
-em,
-b,
-h1,
-h2,
-h3,
-li,
-div{
-  -webkit-user-select:text;
-  user-select:text;
-}
+/* Unified page: old per-person visibility classes are no longer used as switches. */
+.mode-copy,.yiyi-only{display:initial}
 
-/* Interactive controls should still behave like controls instead of selectable text. */
-button,
-.mode-switch,
-.filters,
-.topbar nav,
-.hero-actions,
-.mobile-money,
-.brand{
-  -webkit-user-select:none;
-  user-select:none;
-}
+/* Editable itinerary board */
+.itinerary-legend{display:flex;flex-wrap:wrap;gap:12px 22px;margin:28px 0 8px;color:#b7c4d7;font-size:12px}
+.itinerary-legend span{display:flex;align-items:center;gap:8px}
+.legend-dot{width:13px;height:13px;border-radius:4px;border:1px solid rgba(255,255,255,.28);box-shadow:0 0 0 2px rgba(255,255,255,.025)}
+.legend-dot.fixed{background:#000}.legend-dot.yiyi{background:#4F9D9D}.legend-dot.unsure{background:#fff}.legend-dot.f517{background:#8F4586}
+.trip-item-form{display:grid;grid-template-columns:minmax(220px,1fr) 190px 170px auto auto;gap:9px;margin:0 0 24px;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(5,18,36,.72)}
+.trip-item-form input,.trip-item-form select,.trip-item-form button{min-height:44px;border:1px solid #2b405c;border-radius:8px;background:#061427;color:#eaf2ff;padding:0 13px}
+.trip-item-form input::placeholder{color:#74859e}.trip-item-form select{cursor:pointer}.trip-item-form button{border-color:#4F9D9D;background:#4F9D9D;color:white;font-weight:800;cursor:pointer}.trip-item-form .ghost-action{background:transparent;border-color:#43536a;color:#aebbd0}
+.trip-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.trip-day{min-width:0;border:1px solid var(--line);border-radius:12px;background:rgba(5,18,36,.77);overflow:hidden}
+.trip-day>header{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
+.trip-day>header span{color:#fff;font:400 26px Georgia,serif}.trip-day>header small{color:#8192aa;font-size:10px;letter-spacing:.13em}
+.trip-dropzone{min-height:110px;padding:12px;display:grid;align-content:start;gap:8px;transition:.15s}
+.trip-dropzone.drag-over{background:rgba(79,157,157,.11);box-shadow:inset 0 0 0 1px rgba(79,157,157,.5)}
+.trip-item{--item-bg:#fff;--item-fg:#101318;display:grid;grid-template-columns:22px minmax(0,1fr) 28px;align-items:center;gap:8px;min-height:58px;padding:9px 10px;border:1px solid color-mix(in srgb,var(--item-bg) 65%,#73839a);border-radius:9px;background:var(--item-bg);color:var(--item-fg);box-shadow:0 5px 16px rgba(0,0,0,.14)}
+.trip-item[draggable="true"]{cursor:grab}.trip-item[draggable="true"]:active{cursor:grabbing}.trip-item.dragging{opacity:.35}
+.trip-item-fixed{--item-bg:#000;--item-fg:#fff;grid-template-columns:22px minmax(0,1fr);border-color:#333;cursor:not-allowed}.trip-item-yiyi{--item-bg:#4F9D9D;--item-fg:#fff}.trip-item-unsure{--item-bg:#fff;--item-fg:#11151a}.trip-item-f517{--item-bg:#8F4586;--item-fg:#fff}
+.trip-grip{font-size:17px;text-align:center;opacity:.65;user-select:none}.trip-item-copy{min-width:0}.trip-item-copy small{display:block;margin-bottom:2px;color:inherit;opacity:.62;font-size:8px;font-weight:900;letter-spacing:.13em}.trip-item-copy strong{display:block;color:inherit;font-size:13px;line-height:1.45;overflow-wrap:anywhere}.trip-remove{width:27px;height:27px;border:0;border-radius:50%;background:rgba(0,0,0,.14);color:inherit;cursor:pointer;font-size:18px;line-height:1}.trip-item-unsure .trip-remove{background:#e8e8e8}
+
+/* Allow normal trip content to be selected and copied. */
+body,main,section,article,aside,header,footer,p,span,small,strong,em,b,h1,h2,h3,li,div{-webkit-user-select:text;user-select:text}
+button,.filters,.topbar nav,.hero-actions,.mobile-money,.brand,.trip-item,.trip-item-form{-webkit-user-select:none;user-select:none}
 
 @media (max-width:980px){
-  .route-line.route-line-four{
-    grid-template-columns:1fr;
-    gap:14px;
-    margin-top:45px;
-  }
-  .route-line-four .route-connector{
-    width:1px;
-    height:28px;
-    margin-left:31px;
-    background:linear-gradient(180deg,var(--line),rgba(255,255,255,.5),var(--line));
-  }
+  .route-line.route-line-four{grid-template-columns:1fr;gap:14px;margin-top:45px}
+  .route-line-four .route-connector{width:1px;height:28px;margin-left:31px;background:linear-gradient(180deg,var(--line),rgba(255,255,255,.5),var(--line))}
   .route-line-four .route-connector span{font-size:12px}
+  .trip-item-form{grid-template-columns:1fr 1fr}.trip-item-form input{grid-column:1/-1}.trip-item-form button{min-width:0}
 }
 
 @media (max-width:680px){
-  .transport-grid article{min-height:150px;padding:20px}
-  .transport-grid small{font-size:13px;letter-spacing:.08em}
-  .transport-grid strong{font-size:21px}
-  .transport-grid span{font-size:13px}
-  .transport-grid span b{font-size:17px}
-  .route-line-four .route-stop strong{font-size:26px}
-  .route-line-four .route-stop span{font-size:12px}
+  .transport-grid article{min-height:150px;padding:20px}.transport-grid small{font-size:13px;letter-spacing:.08em}.transport-grid strong{font-size:21px}.transport-grid span{font-size:13px}.transport-grid span b{font-size:17px}.route-line-four .route-stop strong{font-size:26px}.route-line-four .route-stop span{font-size:12px}
+  .trip-board{grid-template-columns:1fr}.trip-item-form{grid-template-columns:1fr}.trip-item-form input{grid-column:auto}.trip-day>header span{font-size:24px}.trip-dropzone{min-height:90px}.trip-item{min-height:55px}.itinerary .section-heading.split{align-items:start;flex-direction:column}.itinerary-legend{gap:9px 15px}
 }
