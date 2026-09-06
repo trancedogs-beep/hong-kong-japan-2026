@@ -3,28 +3,29 @@
   if (!app) return;
 
   const PREP_KEY = "trip-prep-v1";
-  const ITINERARY_KEY = "trip-itinerary-board-v1";
+  const ITINERARY_KEY = "trip-itinerary-board-v2";
   const prepItems = [...document.querySelectorAll(".prep-item[data-id]")];
 
   const defaultItems = [
     {id:"hk-flight-in",day:1,title:"HX253・TPE → HKG・14:15 抵達",type:"fixed"},
     {id:"page148-in",day:1,title:"Page 148・Check-in",type:"fixed"},
     {id:"united-hair",day:1,title:"United Hair Shop・21:30",type:"yiyi"},
-    {id:"oi-man-sang",day:1,title:"愛文生・23:00",type:"yiyi"},
-    {id:"avenue-stars",day:1,title:"星光大道",type:"unsure"},
+    {id:"oi-man-sang",day:1,title:"愛文生・23:00",type:"unsure"},
+    {id:"avenue-stars",day:1,title:"星光大道",type:"yiyi"},
 
-    {id:"noc",day:2,title:"NOC Coffee",type:"f517"},
+    {id:"noc",day:2,title:"NOC Coffee",type:"yiyi"},
     {id:"bakehouse",day:2,title:"Bakehouse",type:"yiyi"},
     {id:"hashtag-b",day:2,title:"Hashtag B",type:"yiyi"},
     {id:"the24st",day:2,title:"THE 24 . ST・買伴手禮",type:"yiyi"},
-    {id:"fine-foods",day:2,title:"帝苑餅店 FINE FOODS",type:"yiyi"},
+    {id:"fine-foods",day:2,title:"帝苑餅店",type:"unsure"},
     {id:"kams",day:2,title:"甘牌燒鵝",type:"yiyi"},
-    {id:"central-free",day:2,title:"中環隨便玩",type:"unsure"},
+    {id:"wong-to-yick",day:2,title:"黃道益活絡油",type:"yiyi"},
+    {id:"soft-thunder",day:2,title:"Soft Thunder Bakery",type:"unsure"},
 
-    {id:"fineprint",day:3,title:"FINEPRINT",type:"f517"},
-    {id:"tai-hang",day:3,title:"大坑散步",type:"unsure"},
+    {id:"fineprint",day:3,title:"FINEPRINT",type:"unsure"},
+    {id:"tai-hang",day:3,title:"大坑",type:"unsure"},
     {id:"stanley",day:3,title:"赤柱廣場",type:"unsure"},
-    {id:"le-petit",day:3,title:"Le Petit Salon・Stanley",type:"unsure"},
+    {id:"le-petit",day:3,title:"Le Petit Salon",type:"unsure"},
 
     {id:"aus-dairy",day:4,title:"澳洲牛奶公司・07:30 起早餐",type:"yiyi"},
     {id:"hk-airport",day:4,title:"前往香港機場",type:"fixed"},
@@ -33,9 +34,11 @@
 
     {id:"jp-flight-in",day:5,title:"JX820・TPE → KIX・12:15 抵達",type:"fixed"},
     {id:"park-front",day:5,title:"日本環球影城園前飯店・Check-in",type:"fixed"},
-    {id:"donki-dotonbori",day:5,title:"唐吉軻德・道頓堀店",type:"unsure"},
-    {id:"lush",day:5,title:"LUSH",type:"unsure"},
-    {id:"osaka-wander",day:5,title:"隨便逛＋早點回飯店休息",type:"unsure"},
+    {id:"ten-yen",day:5,title:"10元燒",type:"yiyi"},
+    {id:"donki-dotonbori",day:5,title:"唐吉軻德",type:"yiyi"},
+    {id:"muji",day:5,title:"無印良品",type:"yiyi"},
+    {id:"bic-camera",day:5,title:"BIC CAMERA",type:"yiyi"},
+    {id:"lush",day:5,title:"LUSH",type:"yiyi"},
 
     {id:"usj-fast",day:6,title:"USJ・快速通關攻略日",type:"fixed"},
     {id:"usj-nintendo",day:6,title:"超級任天堂世界",type:"yiyi"},
@@ -50,15 +53,14 @@
 
     {id:"osaka-kyoto",day:8,title:"大阪 → 京都",type:"fixed"},
     {id:"kishotei-in",day:8,title:"喜招邸 御所南・入住",type:"fixed"},
-    {id:"kamogawa",day:8,title:"鴨川散步",type:"unsure"},
+    {id:"kamogawa",day:8,title:"鴨川",type:"unsure"},
+    {id:"lescamoteur",day:8,title:"L'Escamoteur",type:"unsure"},
 
-    {id:"arashiyama",day:9,title:"嵐山",type:"f517"},
-    {id:"togetsukyo",day:9,title:"渡月橋",type:"f517"},
+    {id:"arashiyama",day:9,title:"嵐山",type:"unsure"},
+    {id:"togetsukyo",day:9,title:"渡月橋",type:"unsure"},
     {id:"kyoto-osaka",day:9,title:"京都 → 大阪・回 Chuan House",type:"fixed"},
 
-    {id:"bic-camera",day:10,title:"BIC CAMERA・大阪自由逛",type:"yiyi"},
-    {id:"muji",day:10,title:"無印良品・必去",type:"f517"},
-    {id:"osaka-free",day:10,title:"大阪自由逛",type:"unsure"},
+    {id:"seam-osaka",day:10,title:"大阪 SEAM",type:"unsure"},
 
     {id:"last-shopping",day:11,title:"最後採買／逛街",type:"unsure"},
     {id:"kix-transfer",day:11,title:"前往關西機場",type:"fixed"},
@@ -77,7 +79,7 @@
 
   function saveItinerary() { localStorage.setItem(ITINERARY_KEY, JSON.stringify(itinerary)); }
   function typeLabel(type) {
-    return {fixed:"固定", yiyi:"一一必去", unsure:"不確定", f517:"517 必去"}[type] || "行程";
+    return {fixed:"固定", yiyi:"一一必去", unsure:"自由更動", f517:"517 必去"}[type] || "行程";
   }
   function renderItinerary() {
     document.querySelectorAll(".trip-dropzone").forEach(zone => zone.innerHTML = "");
