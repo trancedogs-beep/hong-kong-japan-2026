@@ -93,6 +93,36 @@ footer{position:relative!important;z-index:3!important}
 .sync-share:disabled{cursor:wait;opacity:.58}
 @keyframes sync-pulse{50%{opacity:.35;transform:scale(.82)}}
 
+.trip-item,.trip-item-fixed{grid-template-columns:22px minmax(0,1fr) auto!important}
+.trip-card-actions{display:flex;align-items:center;justify-content:flex-end;gap:4px}
+.trip-link-open,.trip-link-edit,.trip-remove{display:grid;place-items:center;width:29px;height:29px;flex:0 0 auto;border:0;border-radius:50%;color:inherit;cursor:pointer}
+.trip-link-open{background:rgba(255,255,255,.22);text-decoration:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.trip-item-unsure .trip-link-open{background:#dcece5;box-shadow:inset 0 0 0 1px #c8ddd4;color:#496f63}
+.trip-link-edit{background:rgba(0,0,0,.1)}
+.trip-item-unsure .trip-link-edit{background:#ecece6}
+.trip-link-open:hover,.trip-link-edit:hover{transform:translateY(-1px);filter:brightness(.96)}
+.trip-link-open svg,.trip-link-edit svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.trip-link-edit[data-empty="true"]{outline:1px dashed currentColor;outline-offset:-3px;opacity:.82}
+.trip-link-dialog{width:min(520px,calc(100% - 28px));padding:0;border:1px solid #afbeb5;border-radius:6px;background:#fffdf7;color:#405049;box-shadow:0 24px 80px rgba(45,58,51,.28)}
+.trip-link-dialog::backdrop{background:rgba(42,52,47,.48);backdrop-filter:blur(2px)}
+.trip-link-dialog form{display:grid;gap:12px;padding:22px}
+.trip-link-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.trip-link-dialog-head>div{display:grid;gap:3px}
+.trip-link-dialog-head small{color:#82a098;font-size:9px;font-weight:800;letter-spacing:.18em}
+.trip-link-dialog-head strong{font-family:var(--font-display,inherit);font-size:25px;font-weight:500}
+.trip-link-close{border:0;background:transparent;color:#7f8c85;cursor:pointer;font-size:25px;line-height:1}
+.trip-link-dialog p{margin:0;color:#6f7c75;font-size:13px;font-weight:700}
+.trip-link-dialog label{font-size:11px;font-weight:800;letter-spacing:.08em}
+.trip-link-dialog input{min-height:48px;padding:0 13px;border:1px solid #bdc9c1;border-radius:3px;background:#fff;color:#34433c;font-size:15px}
+.trip-link-dialog input:focus{outline:2px solid rgba(120,159,152,.3);border-color:#789f98}
+.trip-link-help{color:#87928c;font-size:11px;line-height:1.6}
+.trip-link-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.trip-link-dialog-actions button{min-height:40px;padding:0 14px;border:1px solid #bdc9c1;border-radius:3px;cursor:pointer;font-size:12px;font-weight:700}
+.trip-link-save{border-color:#789f98!important;background:#789f98;color:#fff}
+.trip-link-cancel{background:#f7f3e9;color:#66756d}
+.trip-link-delete{margin-right:auto;background:transparent;color:#a0665e}
+.trip-link-delete[hidden]{display:none}
+
 @media(max-width:980px){
   .journal-art{height:760px}
   .journal-art img{width:auto;min-width:1600px;height:760px;max-width:none;position:absolute;left:50%;transform:translateX(-50%);object-fit:cover}
@@ -104,4 +134,7 @@ footer{position:relative!important;z-index:3!important}
   .hero-content{background:rgba(250,248,241,.56);padding:18px;border-radius:6px;box-shadow:0 8px 30px rgba(84,91,83,.06)}
   .sync-panel{align-items:stretch;flex-direction:column;padding:15px}
   .sync-share{width:100%}
+  .trip-link-dialog form{padding:18px}
+  .trip-link-dialog-actions{display:grid;grid-template-columns:1fr 1fr}
+  .trip-link-dialog-actions .trip-link-delete{grid-column:1/-1;width:100%;order:3}
 }

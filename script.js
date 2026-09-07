@@ -21,6 +21,12 @@ import {
   const syncStatus = document.getElementById("sync-status");
   const syncDetail = document.getElementById("sync-detail");
   const shareButton = document.getElementById("share-trip");
+  const linkDialog = document.getElementById("trip-link-dialog");
+  const linkForm = document.getElementById("trip-link-form");
+  const linkInput = document.getElementById("trip-link-url");
+  const linkItemName = document.getElementById("trip-link-item-name");
+  const linkDelete = document.getElementById("trip-link-delete");
+  let editingLinkId = "";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDaOMuNtawMPrXShXRpA-ZVRVSCfP0ECqE",
@@ -87,15 +93,24 @@ import {
     try{await navigator.clipboard.writeText(url)}catch{window.prompt("請複製這個共同編輯連結：",url);return}
     if(shareButton){shareButton.textContent="連結已複製 ✓";setTimeout(()=>{shareButton.textContent="複製共編連結"},1800)}
   }
+  function normalizeLink(value){
+    const text=typeof value==="string"?value.trim():"";
+    if(!text)return "";
+    try{const url=new URL(/^https?:\/\//i.test(text)?text:`https://${text}`);return ["http:","https:"].includes(url.protocol)?url.toString():""}catch{return ""}
+  }
   function sanitizeItinerary(value){
     if(!Array.isArray(value))return null;
     const allowedTypes=new Set(["fixed","yiyi","unsure","f517"]);
-    const clean=value.slice(0,100).map(item=>({
-      id:typeof item?.id==="string"?item.id.slice(0,100):"",
-      day:Number(item?.day),
-      title:typeof item?.title==="string"?item.title.slice(0,120):"",
-      type:allowedTypes.has(item?.type)?item.type:"unsure"
-    })).filter(item=>item.id&&item.title&&Number.isInteger(item.day)&&item.day>=1&&item.day<=11);
+    const clean=value.slice(0,100).map(item=>{
+      const result={
+        id:typeof item?.id==="string"?item.id.slice(0,100):"",
+        day:Number(item?.day),
+        title:typeof item?.title==="string"?item.title.slice(0,120):"",
+        type:allowedTypes.has(item?.type)?item.type:"unsure"
+      };
+      const link=normalizeLink(item?.link);if(link)result.link=link;
+      return result;
+    }).filter(item=>item.id&&item.title&&Number.isInteger(item.day)&&item.day>=1&&item.day<=11);
     return clean.length?clean:null;
   }
   function applyRemoteData(data,fromCompanion=false){
@@ -183,13 +198,43 @@ import {
     }finally{cloud.connecting=false;if(shareButton)shareButton.disabled=false}
   }
 
+  function updateItemLink(id,link){
+    const item=itinerary.find(entry=>entry.id===id);if(!item)return;
+    if(link)item.link=link;else delete item.link;
+    saveItinerary();renderItinerary();
+  }
+  function openLinkEditor(id){
+    const item=itinerary.find(entry=>entry.id===id);if(!item||!linkDialog||!linkInput)return;
+    editingLinkId=id;linkInput.value=normalizeLink(item.link);linkInput.setCustomValidity("");
+    if(linkItemName)linkItemName.textContent=item.title;
+    if(linkDelete)linkDelete.hidden=!item.link;
+    linkDialog.showModal();setTimeout(()=>linkInput.focus(),60);
+  }
+  linkInput?.addEventListener("input",()=>linkInput.setCustomValidity(""));
+  linkForm?.addEventListener("submit",event=>{
+    event.preventDefault();const raw=linkInput?.value.trim()||"";const link=normalizeLink(raw);
+    if(raw&&!link){linkInput.setCustomValidity("請貼上有效的網址");linkInput.reportValidity();return}
+    updateItemLink(editingLinkId,link);linkDialog.close();
+  });
+  document.getElementById("trip-link-close")?.addEventListener("click",()=>linkDialog?.close());
+  document.getElementById("trip-link-cancel")?.addEventListener("click",()=>linkDialog?.close());
+  linkDelete?.addEventListener("click",()=>{updateItemLink(editingLinkId,"");linkDialog?.close()});
+  linkDialog?.addEventListener("close",()=>{editingLinkId=""});
+
   function renderItinerary(){
     document.querySelectorAll(".trip-dropzone").forEach(zone=>zone.innerHTML="");
     itinerary.forEach(item=>{
       const zone=document.querySelector(`.trip-dropzone[data-day="${item.day}"]`);if(!zone)return;
       const card=document.createElement("div");card.className=`trip-item trip-item-${item.type}`;card.dataset.id=item.id;card.draggable=item.type!=="fixed";
-      card.innerHTML=`<span class="trip-grip" aria-hidden="true">${item.type==="fixed"?"●":"⠿"}</span><span class="trip-item-copy"><small>${typeLabel(item.type)}</small><strong></strong></span>${item.type==="fixed"?"":'<button class="trip-remove" type="button" aria-label="刪除行程">×</button>'}`;
+      const hasLink=Boolean(normalizeLink(item.link));
+      const openIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1"/></svg>';
+      const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
+      const addLinkIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15l6-6"/><path d="M7.5 18.5l-2 2a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0"/><path d="M15.5 5.5l2-2a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0"/><path d="M5 5v6M2 8h6"/></svg>';
+      const openLink=hasLink?`<a class="trip-link-open" target="_blank" rel="noopener noreferrer" aria-label="開啟地圖連結" title="開啟連結">${openIcon}</a>`:"";
+      const removeButton=item.type==="fixed"?"":'<button class="trip-remove" type="button" aria-label="刪除行程">×</button>';
+      card.innerHTML=`<span class="trip-grip" aria-hidden="true">${item.type==="fixed"?"●":"⠿"}</span><span class="trip-item-copy"><small>${typeLabel(item.type)}</small><strong></strong></span><span class="trip-card-actions">${openLink}<button class="trip-link-edit" type="button" data-empty="${!hasLink}" aria-label="${hasLink?"編輯":"新增"}行程連結" title="${hasLink?"編輯連結":"新增 Google Maps 連結"}">${hasLink?editIcon:addLinkIcon}</button>${removeButton}</span>`;
       card.querySelector("strong").textContent=item.title;zone.appendChild(card);
+      const anchor=card.querySelector(".trip-link-open");if(anchor)anchor.href=normalizeLink(item.link);
     });bindTripItems();
   }
 
@@ -206,13 +251,15 @@ import {
   }
   function bindTripItems(){
     document.querySelectorAll('.trip-item[draggable="true"]').forEach(card=>{
-      card.addEventListener("dragstart",event=>{draggingId=card.dataset.id;card.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",draggingId)});
+      card.addEventListener("dragstart",event=>{if(event.target.closest(".trip-card-actions")){event.preventDefault();return}draggingId=card.dataset.id;card.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",draggingId)});
       card.addEventListener("dragend",()=>{draggingId=null;clearDragState()});
     });
     document.querySelectorAll(".trip-item").forEach(card=>{
       card.addEventListener("dragover",event=>{if(!draggingId||card.dataset.id===draggingId)return;event.preventDefault();event.stopPropagation();clearDragState();const rect=card.getBoundingClientRect();card.classList.add(event.clientY<rect.top+rect.height/2?"drop-before":"drop-after")});
       card.addEventListener("drop",event=>{if(!draggingId||card.dataset.id===draggingId)return;event.preventDefault();event.stopPropagation();const rect=card.getBoundingClientRect();const after=event.clientY>=rect.top+rect.height/2;const zone=card.closest(".trip-dropzone");moveItem(draggingId,zone.dataset.day,card.dataset.id,after);draggingId=null;clearDragState()});
     });
+    document.querySelectorAll(".trip-link-open").forEach(link=>link.addEventListener("click",event=>event.stopPropagation()));
+    document.querySelectorAll(".trip-link-edit").forEach(button=>button.addEventListener("click",event=>{event.stopPropagation();openLinkEditor(button.closest(".trip-item")?.dataset.id)}));
     document.querySelectorAll(".trip-remove").forEach(button=>button.addEventListener("click",()=>{const id=button.closest(".trip-item")?.dataset.id;itinerary=itinerary.filter(item=>item.id!==id);saveItinerary();renderItinerary()}));
   }
 

@@ -8,7 +8,7 @@
   <link rel="icon" href="public/favicon.svg">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="overview-tweaks.css">
-  <link rel="stylesheet" href="journal-final.css">
+  <link rel="stylesheet" href="journal-final.css?v=20260907-links1">
 </head>
 <body>
 <div class="journal-art" aria-hidden="true"><img src="public/travel-journal-bg.png?v=20260907" alt=""></div>
@@ -67,7 +67,7 @@
   </section>
 
   <section class="itinerary section" id="itinerary">
-    <div class="section-heading split"><div><p>DAILY ITINERARY</p><h2>可拖曳行程板</h2></div><span>可變行程可跨日期拖曳；黑色固定行程不可移動。建立共編連結後會自動同步。</span></div>
+    <div class="section-heading split"><div><p>DAILY ITINERARY</p><h2>可拖曳行程板</h2></div><span>可變行程可跨日期拖曳；點連結圖示可快速開啟地圖。建立共編連結後會自動同步。</span></div>
     <div class="sync-panel" id="sync-panel" data-state="local">
       <div class="sync-copy" role="status" aria-live="polite">
         <i class="sync-dot" aria-hidden="true"></i>
@@ -140,8 +140,25 @@
     <div class="section-heading"><p>REVIEW TOGETHER</p><h2>接下來，只要決定這幾題</h2><span>行程板可以直接拖著討論，517 跟一一不用再切兩個版本。</span></div>
     <div class="decision-grid"><article class="kyoto"><span>01</span><h3>京都路線細節</h3><p>9/19 鴨川周邊、9/20 嵐山與渡月橋；細節保留現場選擇。</p><small>517 Review</small></article><article class="osaka"><span>02</span><h3>USJ 雨天 Build</h3><p>出發前依逐時降雨量決定戶外拍照與室內設施優先順序。</p><small>行前確認</small></article><article class="hongkong"><span>03</span><h3>香港 Day 2 / Day 3</h3><p>餐廳與散步點可直接在行程板跨日拖曳。</p><small>一起調整</small></article><article class="hongkong"><span>04</span><h3>購物採買</h3><p>United Hair、伴手禮與日本採買依現場庫存彈性調整。</p><small>保持彈性</small></article></div>
   </section>
-  <footer><div><strong>香港日本行 2026</strong><span>GitHub Pages 靜態版・2026.09.06</span></div><p>一一 × 517</p></footer>
+  <dialog class="trip-link-dialog" id="trip-link-dialog">
+    <form id="trip-link-form" novalidate>
+      <div class="trip-link-dialog-head">
+        <div><small>QUICK LINK</small><strong>行程快速連結</strong></div>
+        <button class="trip-link-close" type="button" id="trip-link-close" aria-label="關閉">×</button>
+      </div>
+      <p id="trip-link-item-name"></p>
+      <label for="trip-link-url">Google Maps 網址</label>
+      <input id="trip-link-url" type="url" inputmode="url" autocomplete="url" placeholder="https://maps.app.goo.gl/…">
+      <span class="trip-link-help">在 Google Maps 點「分享」→「複製連結」，再貼到這裡。</span>
+      <div class="trip-link-dialog-actions">
+        <button class="trip-link-delete" id="trip-link-delete" type="button">移除連結</button>
+        <button class="trip-link-cancel" id="trip-link-cancel" type="button">取消</button>
+        <button class="trip-link-save" type="submit">儲存連結</button>
+      </div>
+    </form>
+  </dialog>
+  <footer><div><strong>香港日本行 2026</strong><span>GitHub Pages 靜態版・2026.09.07</span></div><p>一一 × 517</p></footer>
 </main>
-<script type="module" src="script.js?v=20260907-sync1"></script>
+<script type="module" src="script.js?v=20260907-links1"></script>
 </body>
 </html>
