@@ -184,7 +184,7 @@ import {
         const data=remote.data();const revision=Number(data.revision)||0;
         if(revision<=cloud.revision)return;
         const fromCompanion=data.updatedBy!==auth.currentUser?.uid;
-        if(cloud.dirty||cloud.saving){
+        if(cloud.dirty||cloud.saving||document.querySelector('.trip-title[data-editing="true"]')){
           if(fromCompanion)setSyncState("saving","偵測到同行人也在修改…","正在確認最新版本");
           return;
         }
@@ -221,28 +221,49 @@ import {
   linkDelete?.addEventListener("click",()=>{updateItemLink(editingLinkId,"");linkDialog?.close()});
   linkDialog?.addEventListener("close",()=>{editingLinkId=""});
 
+  function beginTitleEdit(title){
+    if(!title||title.dataset.editing==="true")return;
+    const item=itinerary.find(entry=>entry.id===title.closest(".trip-item")?.dataset.id);if(!item)return;
+    title.dataset.editing="true";title.dataset.original=item.title;title.contentEditable="plaintext-only";
+    title.setAttribute("role","textbox");title.setAttribute("aria-label","編輯行程內容");
+    const card=title.closest(".trip-item");if(card)card.draggable=false;
+    title.focus();
+    const selection=window.getSelection();if(selection){const range=document.createRange();range.selectNodeContents(title);range.collapse(false);selection.removeAllRanges();selection.addRange(range)}
+  }
+  function finishTitleEdit(title,shouldSave){
+    if(!title||title.dataset.editing!=="true")return;
+    const item=itinerary.find(entry=>entry.id===title.closest(".trip-item")?.dataset.id);
+    const original=title.dataset.original||item?.title||"";
+    const next=title.innerText.replace(/\s+/g," ").trim().slice(0,120);
+    if(item&&shouldSave&&next){item.title=next;title.textContent=next;if(next!==original)saveItinerary()}else title.textContent=original;
+    title.dataset.editing="false";title.contentEditable="false";delete title.dataset.original;
+    title.setAttribute("role","button");title.setAttribute("aria-label","點一下編輯行程內容");
+    const card=title.closest(".trip-item");if(card)card.draggable=true;
+    if(document.activeElement===title)title.blur();
+  }
+
   function renderItinerary(){
     document.querySelectorAll(".trip-dropzone").forEach(zone=>zone.innerHTML="");
     itinerary.forEach(item=>{
       const zone=document.querySelector(`.trip-dropzone[data-day="${item.day}"]`);if(!zone)return;
-      const card=document.createElement("div");card.className=`trip-item trip-item-${item.type}`;card.dataset.id=item.id;card.draggable=item.type!=="fixed";
+      const card=document.createElement("div");card.className=`trip-item trip-item-${item.type}`;card.dataset.id=item.id;card.draggable=true;
       const hasLink=Boolean(normalizeLink(item.link));
       const openIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1"/></svg>';
       const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
       const addLinkIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15l6-6"/><path d="M7.5 18.5l-2 2a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0"/><path d="M15.5 5.5l2-2a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0"/><path d="M5 5v6M2 8h6"/></svg>';
       const openLink=hasLink?`<a class="trip-link-open" target="_blank" rel="noopener noreferrer" aria-label="開啟地圖連結" title="開啟連結">${openIcon}</a>`:"";
-      const removeButton=item.type==="fixed"?"":'<button class="trip-remove" type="button" aria-label="刪除行程">×</button>';
-      card.innerHTML=`<span class="trip-grip" aria-hidden="true">${item.type==="fixed"?"●":"⠿"}</span><span class="trip-item-copy"><small>${typeLabel(item.type)}</small><strong></strong></span><span class="trip-card-actions">${openLink}<button class="trip-link-edit" type="button" data-empty="${!hasLink}" aria-label="${hasLink?"編輯":"新增"}行程連結" title="${hasLink?"編輯連結":"新增 Google Maps 連結"}">${hasLink?editIcon:addLinkIcon}</button>${removeButton}</span>`;
-      card.querySelector("strong").textContent=item.title;zone.appendChild(card);
+      const removeButton='<button class="trip-remove" type="button" aria-label="刪除行程">×</button>';
+      card.innerHTML=`<span class="trip-grip" aria-label="拖曳行程" title="拖曳移動">⠿</span><span class="trip-item-copy"><small>${typeLabel(item.type)}</small><strong class="trip-title" tabindex="0" role="button" aria-label="點一下編輯行程內容" title="點一下編輯"></strong></span><span class="trip-card-actions">${openLink}<button class="trip-link-edit" type="button" data-empty="${!hasLink}" aria-label="${hasLink?"編輯":"新增"}行程連結" title="${hasLink?"編輯連結":"新增 Google Maps 連結"}">${hasLink?editIcon:addLinkIcon}</button>${removeButton}</span>`;
+      card.querySelector(".trip-title").textContent=item.title;zone.appendChild(card);
       const anchor=card.querySelector(".trip-link-open");if(anchor)anchor.href=normalizeLink(item.link);
     });bindTripItems();
   }
 
-  let draggingId=null;
+  let draggingId=null,dragHandleId=null;
   function clearDragState(){document.querySelectorAll(".trip-dropzone,.trip-item").forEach(el=>el.classList.remove("drag-over","drop-before","drop-after"))}
   function moveItem(id,targetDay,targetId=null,after=false){
     const fromIndex=itinerary.findIndex(x=>x.id===id);if(fromIndex<0)return;
-    const item=itinerary[fromIndex];if(item.type==="fixed")return;
+    const item=itinerary[fromIndex];
     itinerary.splice(fromIndex,1);item.day=Number(targetDay);
     if(targetId&&targetId!==id){let targetIndex=itinerary.findIndex(x=>x.id===targetId);if(targetIndex>=0){if(after)targetIndex++;itinerary.splice(targetIndex,0,item)}else itinerary.push(item)}else{
       let insertAt=-1;for(let i=itinerary.length-1;i>=0;i--){if(Number(itinerary[i].day)===Number(targetDay)){insertAt=i+1;break}}if(insertAt<0)itinerary.push(item);else itinerary.splice(insertAt,0,item)
@@ -251,12 +272,25 @@ import {
   }
   function bindTripItems(){
     document.querySelectorAll('.trip-item[draggable="true"]').forEach(card=>{
-      card.addEventListener("dragstart",event=>{if(event.target.closest(".trip-card-actions")){event.preventDefault();return}draggingId=card.dataset.id;card.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",draggingId)});
-      card.addEventListener("dragend",()=>{draggingId=null;clearDragState()});
+      const grip=card.querySelector(".trip-grip");
+      grip?.addEventListener("pointerdown",()=>{dragHandleId=card.dataset.id});
+      grip?.addEventListener("pointerup",()=>{dragHandleId=null});
+      grip?.addEventListener("pointercancel",()=>{dragHandleId=null});
+      card.addEventListener("dragstart",event=>{if(dragHandleId!==card.dataset.id){event.preventDefault();return}draggingId=card.dataset.id;card.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",draggingId)});
+      card.addEventListener("dragend",()=>{draggingId=null;dragHandleId=null;clearDragState()});
     });
     document.querySelectorAll(".trip-item").forEach(card=>{
       card.addEventListener("dragover",event=>{if(!draggingId||card.dataset.id===draggingId)return;event.preventDefault();event.stopPropagation();clearDragState();const rect=card.getBoundingClientRect();card.classList.add(event.clientY<rect.top+rect.height/2?"drop-before":"drop-after")});
       card.addEventListener("drop",event=>{if(!draggingId||card.dataset.id===draggingId)return;event.preventDefault();event.stopPropagation();const rect=card.getBoundingClientRect();const after=event.clientY>=rect.top+rect.height/2;const zone=card.closest(".trip-dropzone");moveItem(draggingId,zone.dataset.day,card.dataset.id,after);draggingId=null;clearDragState()});
+    });
+    document.querySelectorAll(".trip-title").forEach(title=>{
+      title.addEventListener("click",event=>{event.stopPropagation();beginTitleEdit(title)});
+      title.addEventListener("keydown",event=>{
+        if(title.dataset.editing!=="true"&&(event.key==="Enter"||event.key===" ")){event.preventDefault();beginTitleEdit(title);return}
+        if(title.dataset.editing==="true"&&event.key==="Enter"){event.preventDefault();title.blur()}
+        if(title.dataset.editing==="true"&&event.key==="Escape"){event.preventDefault();finishTitleEdit(title,false)}
+      });
+      title.addEventListener("blur",()=>finishTitleEdit(title,true));
     });
     document.querySelectorAll(".trip-link-open").forEach(link=>link.addEventListener("click",event=>event.stopPropagation()));
     document.querySelectorAll(".trip-link-edit").forEach(button=>button.addEventListener("click",event=>{event.stopPropagation();openLinkEditor(button.closest(".trip-item")?.dataset.id)}));
