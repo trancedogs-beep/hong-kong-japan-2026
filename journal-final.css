@@ -93,6 +93,21 @@ footer{position:relative!important;z-index:3!important}
 .sync-share:disabled{cursor:wait;opacity:.58}
 @keyframes sync-pulse{50%{opacity:.35;transform:scale(.82)}}
 
+.toolbox{position:relative}
+.tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.tool-card{display:grid;grid-template-columns:48px minmax(0,1fr) 24px;align-items:center;gap:13px;min-height:116px;padding:17px;border:1px solid #c2ccc5;border-radius:4px;background:rgba(255,253,247,.9);color:#405049;text-decoration:none;box-shadow:3px 4px 0 rgba(106,126,114,.1);transition:transform .15s,box-shadow .15s,border-color .15s}
+.tool-card:hover{transform:translateY(-2px) rotate(-.15deg);border-color:#92aaa0;box-shadow:4px 7px 0 rgba(106,126,114,.12)}
+.tool-badge{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#e5efea;color:#5d8277;font:800 10px/1 Arial,sans-serif;letter-spacing:.06em;box-shadow:inset 0 0 0 1px rgba(93,130,119,.18)}
+.tool-live .tool-badge{background:#f5e2dd;color:#b26f62}
+.tool-transit .tool-badge{background:#dfecea;color:#4f8179}
+.tool-japan .tool-badge{background:#f4e5e7;color:#a66570}
+.tool-flight .tool-badge{background:#e4e9f0;color:#667c99}
+.tool-copy{display:grid;gap:4px;min-width:0}
+.tool-copy small{color:#89958e;font-size:8px;font-weight:800;letter-spacing:.14em}
+.tool-copy strong{font-size:15px;line-height:1.35}
+.tool-copy em{color:#77847d;font-size:10px;font-style:normal;line-height:1.55}
+.tool-card>i{align-self:start;color:#8ca098;font:400 17px/1 Georgia,serif}
+
 .trip-item,.trip-item-fixed{grid-template-columns:22px minmax(0,1fr) auto!important}
 .trip-item[draggable="true"],.trip-item-fixed{cursor:default!important}
 .trip-grip{cursor:grab!important;touch-action:none;padding:8px 3px}
@@ -132,11 +147,14 @@ footer{position:relative!important;z-index:3!important}
 
 @media(max-width:980px){
   .journal-art{height:760px}
+  .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .journal-art img{width:auto;min-width:1600px;height:760px;max-width:none;position:absolute;left:50%;transform:translateX(-50%);object-fit:cover}
 }
 
 @media(max-width:680px){
   .journal-art{top:64px;height:720px}
+  .tool-grid{grid-template-columns:1fr}
+  .tool-card{min-height:104px;padding:15px}
   .journal-art img{min-width:1450px;height:720px;opacity:.5}
   .hero-content{background:rgba(250,248,241,.56);padding:18px;border-radius:6px;box-shadow:0 8px 30px rgba(84,91,83,.06)}
   .sync-panel{align-items:stretch;flex-direction:column;padding:15px}
